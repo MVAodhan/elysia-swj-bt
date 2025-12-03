@@ -6,7 +6,10 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/cron": "^1.4.1",
+    "discord.js": "^14.25.1",
+    "elysia": "latest",
+    "googleapis": "^166.0.0"
   },
   "devDependencies": {
     "bun-types": "latest"
