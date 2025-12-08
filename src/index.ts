@@ -1,9 +1,9 @@
 import cron from "@elysiajs/cron";
 import { Elysia } from "elysia";
 
-import { YouTubeChatService } from "../lib/youtube";
+import { YouTubeChatService } from "./lib/youtube";
 import { WebhookClient } from "discord.js";
-import { setToArray } from "../lib/utils";
+import { setToArray } from "./lib/utils";
 
 const apiKey = process.env.YOUTUBE_API_KEY || "";
 const webhookId = process.env.DISCORD_WEBHOOK_ID || "";
