@@ -3,56 +3,94 @@ import { Elysia } from "elysia";
 
 import { YouTubeChatService } from "../lib/youtube";
 import { WebhookClient } from "discord.js";
+import { setToArray } from "../lib/utils";
 
 const apiKey = process.env.YOUTUBE_API_KEY || "";
 const webhookId = process.env.DISCORD_WEBHOOK_ID || "";
 const webhookToken = process.env.DISCORD_WEBHOOK_TOKEN || "";
 const ytService = new YouTubeChatService(apiKey);
 const webhookClient = new WebhookClient({ id: webhookId, token: webhookToken });
-
-const collectedLinks: { link: string; author: string; timestamp: string }[] =
-  [];
-
 const channelId = process.env.YOUTUBE_CHANNEL_ID;
+
+const uniqueLinks = new Set<string>();
+const linksMap = new Map<string, []>();
+
+let allLinks: { [x: string]: string }[][] = [];
+
 const app = new Elysia()
   .use(
     cron({
       name: "polling",
-      pattern: "56 23 * * *",
+      pattern: "30 9 * * 3",
       async run() {
         const res = await ytService.findLiveStreams(channelId!);
-
-        ytService.startPolling(res[0]!, (link, author) => {
-          console.log(`Link found: ${link} from ${author}`);
-
-          webhookClient.send({
-            content: link,
-          });
-
-          collectedLinks.push({
-            link,
-            author,
-            timestamp: new Date().toISOString(),
-          });
+        ytService.startPolling(res[0]!, (link) => {
+          console.log(`Link found: ${link}`);
+          if (!uniqueLinks.has(link)) {
+            webhookClient.send({
+              content: link,
+            });
+            uniqueLinks.add(link);
+          }
         });
-
         setTimeout(() => {
-          fetch("http://localhost:3000/stop");
-        }, 120000);
+          fetch(`${app.server?.hostname}:${app.server?.port}/stop-cron`);
+        }, 60 * 10000);
       },
     })
   )
   .get(
-    "/stop",
+    "/stop-cron",
     ({
       store: {
         cron: { polling },
       },
     }) => {
       polling.stop();
-      console.log("polling stopped");
+      ytService.stopPolling();
+      const linksMapAsArr = setToArray(uniqueLinks, linksMap);
+      allLinks = [...allLinks, linksMapAsArr];
+      uniqueLinks.clear();
+      linksMap.clear();
     }
   )
+  .get("/stop-man", () => {
+    ytService.stopPolling();
+    const linksMapAsArr = setToArray(uniqueLinks, linksMap);
+    allLinks = [...allLinks, linksMapAsArr];
+    uniqueLinks.clear();
+    linksMap.clear();
+    return {
+      stop: "success",
+    };
+  })
+  .get("/links", () => {
+    const links = allLinks;
+    return {
+      links,
+    };
+  })
+  .get("/trigger", async () => {
+    const res = await ytService.findLiveStreams(channelId!);
+    ytService.startPolling(res[0]!, (link) => {
+      console.log(`Link found: ${link}`);
+      if (!uniqueLinks.has(link)) {
+        webhookClient.send({
+          content: link,
+        });
+        uniqueLinks.add(link);
+      }
+    });
+    setTimeout(() => {
+      fetch(`${app.server?.hostname}:${app.server?.port}/stop-man`);
+    }, 60000);
+    return {
+      trigger: "success",
+    };
+  })
+  .get("/health", () => {
+    return { status: "live", date: new Date() };
+  })
   .listen(3000);
 
 console.log(

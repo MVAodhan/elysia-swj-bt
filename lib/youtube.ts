@@ -50,37 +50,6 @@ export class YouTubeChatService {
     }
   }
 
-  // async getVideoDetails(videoId: string) {
-  //   try {
-  //     const response = await this.youtube.liveBroadcasts.list({
-  //       part: ["snippet", "contentDetails", "status"],
-  //       id: [videoId],
-  //     });
-
-  //     const video = response.data.items?.[0];
-  //     if (!video || !video.snippet) {
-  //       return null;
-  //     }
-
-  //     console.log("video", video);
-  //     const snippet = video.snippet;
-  //     return {
-  //       title: snippet.title || "",
-  //       description: snippet.description || "",
-  //       thumbnail:
-  //         snippet.thumbnails?.maxres?.url ||
-  //         snippet.thumbnails?.high?.url ||
-  //         snippet.thumbnails?.medium?.url ||
-  //         snippet.thumbnails?.default?.url ||
-  //         "",
-  //       url: `https://www.youtube.com/watch?v=${videoId}`,
-  //     };
-  //   } catch (error) {
-  //     console.error("Error fetching video details:", error);
-  //     return null;
-  //   }
-  // }
-
   async getChatMessages(liveChatId: string, pageToken?: string) {
     try {
       const response = await this.youtube.liveChatMessages.list({
@@ -106,10 +75,7 @@ export class YouTubeChatService {
     return matches ? Array.from(matches) : [];
   }
 
-  async startPolling(
-    videoId: string,
-    onLinkFound: (link: string, author: string) => void
-  ) {
+  async startPolling(videoId: string, onLinkFound: (link: string) => void) {
     if (this.isPolling) {
       console.log("Already polling");
       return;
@@ -142,7 +108,7 @@ export class YouTubeChatService {
 
             if (links.length > 0) {
               links.forEach((link) => {
-                onLinkFound(link, msg.authorDetails?.displayName || "Host");
+                onLinkFound(link);
               });
             }
           }
