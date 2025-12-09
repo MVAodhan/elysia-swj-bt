@@ -2,7 +2,7 @@ import cron from "@elysiajs/cron";
 import { Elysia } from "elysia";
 
 import { YouTubeChatService } from "./lib/youtube";
-import { WebhookClient } from "discord.js";
+import { time, WebhookClient } from "discord.js";
 import { setToArray } from "./lib/utils";
 
 const apiKey = process.env.YOUTUBE_API_KEY || "";
@@ -35,7 +35,8 @@ const app = new Elysia()
         });
         setTimeout(() => {
           fetch(`${app.server?.hostname}:${app.server?.port}/stop-cron`);
-        }, 60 * 10000);
+          console.log("fired timeout");
+        }, 10800000);
       },
     })
   )
@@ -66,6 +67,7 @@ const app = new Elysia()
   })
   .get("/links", () => {
     const links = allLinks;
+    allLinks = [];
     return {
       links,
     };
@@ -89,10 +91,17 @@ const app = new Elysia()
     };
   })
   .get("/health", () => {
-    return { status: "live", date: new Date() };
+    return {
+      status: "live",
+      date: new Date(),
+      time: new Date().getTime(),
+      timezoneOffset: new Date().getTimezoneOffset(),
+    };
   })
   .listen(3000);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+  new Date().getTime(),
+  new Date().getTimezoneOffset()
 );
