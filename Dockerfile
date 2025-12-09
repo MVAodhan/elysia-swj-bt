@@ -27,7 +27,7 @@ COPY . .
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src .
+COPY --from=prerelease /usr/src/app .
 
 # run the app
 USER bun

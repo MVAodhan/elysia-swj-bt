@@ -2,6 +2,7 @@ node_modules
 Dockerfile*
 docker-compose*
 .dockerignore
+.env
 .git
 .gitignore
 README.md
@@ -9,7 +10,6 @@ LICENSE
 .vscode
 Makefile
 helm-charts
-.env
 .editorconfig
 .idea
 coverage*
