@@ -21,7 +21,7 @@ const app = new Elysia()
   .use(
     cron({
       name: "polling",
-      pattern: "30 17 * * 4",
+      pattern: "45 17 * * 2",
       async run() {
         const res = await ytService.findLiveStreams(channelId!);
         ytService.startPolling(res[0]!, (link) => {
